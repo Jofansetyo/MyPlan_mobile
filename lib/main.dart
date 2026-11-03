@@ -12,7 +12,9 @@ import 'screens/home_screen.dart';
 import 'screens/finance_screen.dart';
 import 'screens/task_screen.dart';
 import 'screens/history_screen.dart';
-import 'screens/splash_screen.dart'; // ← TAMBAH
+import 'screens/splash_screen.dart';
+import 'screens/add_transaction_screen.dart';
+import 'screens/add_task_screen.dart';
 import 'models/adapters.dart';
 
 void main() async {
@@ -91,6 +93,50 @@ class _MainNavigationState extends State<MainNavigation> {
         index: _currentIndex,
         children: _screens,
       ),
+      floatingActionButton: _currentIndex != 3
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_currentIndex == 0 || _currentIndex == 1)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: FloatingActionButton.small(
+                      heroTag: 'fab_transaction',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AddTransactionScreen()),
+                      ),
+                      tooltip: 'Tambah Transaksi',
+                      child: const Icon(Icons.account_balance_wallet_outlined),
+                    ),
+                  ),
+                FloatingActionButton(
+                  heroTag: 'fab_main',
+                  onPressed: () {
+                    if (_currentIndex == 2) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AddTaskScreen()),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AddTransactionScreen()),
+                      );
+                    }
+                  },
+                  tooltip:
+                      _currentIndex == 2 ? 'Tambah Tugas' : 'Tambah Transaksi',
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
