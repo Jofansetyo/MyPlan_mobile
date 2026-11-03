@@ -90,14 +90,16 @@ class SettingsScreen extends StatelessWidget {
                                           .textTheme
                                           .bodyMedium
                                           ?.copyWith(
-                                              color: textColor.withValues(alpha: 0.7),
+                                              color: textColor.withValues(
+                                                  alpha: 0.7),
                                               fontSize: 12)),
                                   Text(appProvider.city,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
                                           ?.copyWith(
-                                              color: textColor.withValues(alpha: 0.7),
+                                              color: textColor.withValues(
+                                                  alpha: 0.7),
                                               fontSize: 12)),
                                 ],
                               ),
@@ -148,7 +150,8 @@ class SettingsScreen extends StatelessWidget {
                                       .textTheme
                                       .bodyMedium
                                       ?.copyWith(
-                                          color: textColor.withValues(alpha: 0.7))),
+                                          color: textColor.withValues(
+                                              alpha: 0.7))),
                               const SizedBox(height: 2),
                               Text(
                                 currencyFormatter
@@ -172,6 +175,49 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // ====== SALDO AWAL ======
+                Text('SALDO AWAL DOMPET',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: textColor)),
+                const SizedBox(height: 4),
+                Text(
+                  'Saldo sebelum mulai mencatat di aplikasi ini.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: textColor.withValues(alpha: 0.6)),
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: Column(
+                    children: [
+                      _walletBalanceRow(
+                        context,
+                        financeProvider,
+                        currencyFormatter,
+                        textColor,
+                        wallet: 'Cash',
+                        icon: Icons.payments_outlined,
+                        amount: financeProvider.initialBalanceCash,
+                      ),
+                      Divider(
+                          color: borderColor.withValues(alpha: 0.3), height: 1),
+                      _walletBalanceRow(
+                        context,
+                        financeProvider,
+                        currencyFormatter,
+                        textColor,
+                        wallet: 'E-Wallet',
+                        icon: Icons.account_balance_wallet_outlined,
+                        amount: financeProvider.initialBalanceEWallet,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -278,7 +324,8 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       onChanged: (v) => appProvider.toggleDeadlineReminder(v),
                     ),
-                    Divider(color: borderColor.withValues(alpha: 0.3), height: 1),
+                    Divider(
+                        color: borderColor.withValues(alpha: 0.3), height: 1),
                     SwitchListTile(
                       title: Text('Peringatan batas uang',
                           style: Theme.of(context).textTheme.bodyLarge),
@@ -402,6 +449,141 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _walletBalanceRow(
+    BuildContext context,
+    FinanceProvider fp,
+    NumberFormat formatter,
+    Color textColor, {
+    required String wallet,
+    required IconData icon,
+    required double amount,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.inkSky, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(wallet,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: textColor.withValues(alpha: 0.7))),
+                const SizedBox(height: 2),
+                Text(
+                  formatter.format(amount),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 16, color: textColor, fontFamily: 'KodeMono'),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.edit_outlined, color: textColor),
+            onPressed: () =>
+                _showInitialBalanceDialog(context, fp, formatter, wallet),
+            tooltip: 'Ubah',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInitialBalanceDialog(
+    BuildContext context,
+    FinanceProvider fp,
+    NumberFormat formatter,
+    String wallet,
+  ) {
+    final currentAmount =
+        wallet == 'Cash' ? fp.initialBalanceCash : fp.initialBalanceEWallet;
+    final controller = TextEditingController(
+      text: currentAmount > 0 ? currentAmount.toInt().toString() : '',
+    );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.inkNavy;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isDark ? AppTheme.inkSky : AppTheme.inkNavy,
+            width: 1.5,
+          ),
+        ),
+        title: Text('Saldo Awal $wallet',
+            style: Theme.of(context).textTheme.titleLarge),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Jumlah uang di $wallet sebelum mulai mencatat.',
+                style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [CurrencyInputFormatter()],
+              style: TextStyle(
+                  fontFamily: 'KodeMono',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textColor),
+              decoration: InputDecoration(
+                prefixText: 'Rp ',
+                prefixStyle: TextStyle(
+                    fontFamily: 'KodeMono', fontSize: 18, color: textColor),
+                hintText: '0',
+                filled: true,
+                fillColor: isDark ? AppTheme.darkBg : AppTheme.paperBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                      color: isDark ? AppTheme.inkSky : AppTheme.inkNavy,
+                      width: 1.5),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                      color: isDark ? AppTheme.inkSky : AppTheme.inkNavy,
+                      width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('BATAL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final raw = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+              final value = double.tryParse(raw) ?? 0;
+              fp.setInitialBalance(wallet, value);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Saldo awal $wallet diubah ke ${formatter.format(value)}'),
+                ),
+              );
+            },
+            child: const Text('SIMPAN'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBackgroundPreview(
       BuildContext context, AppProvider p, bool isDark) {
     if (p.bgType == 'image' && p.bgImagePath != null) {
@@ -444,7 +626,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildColorBox(BuildContext context, AppProvider p, Color color) {
-    final isSelected = p.bgType == 'color' && p.bgColor.toARGB32() == color.toARGB32();
+    final isSelected =
+        p.bgType == 'color' && p.bgColor.toARGB32() == color.toARGB32();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: InkWell(

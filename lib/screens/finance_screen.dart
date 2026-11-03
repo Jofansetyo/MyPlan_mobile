@@ -35,7 +35,8 @@ class FinanceScreen extends StatelessWidget {
             children: [
               Text('KEUANGAN / $monthName',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: textColor.withValues(alpha: 0.7), letterSpacing: 1.2)),
+                      color: textColor.withValues(alpha: 0.7),
+                      letterSpacing: 1.2)),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,7 +218,8 @@ class FinanceScreen extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .bodyMedium
-                              ?.copyWith(color: textColor.withValues(alpha: 0.7))),
+                              ?.copyWith(
+                                  color: textColor.withValues(alpha: 0.7))),
                     ),
                   ),
                 )
@@ -268,6 +270,12 @@ class FinanceScreen extends StatelessWidget {
   Widget _buildTransactionItem(BuildContext context, Transaction trx,
       Color textColor, Color borderColor, NumberFormat formatter) {
     final isIncome = trx.type == 'Pemasukan';
+    final isTransfer = trx.type == 'Transfer';
+    final amountColor = isTransfer
+        ? textColor
+        : isIncome
+            ? AppTheme.incomeGreen
+            : AppTheme.expenseRed;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
       child: Row(
@@ -283,31 +291,33 @@ class FinanceScreen extends StatelessWidget {
                         ?.copyWith(fontSize: 15)),
                 const SizedBox(height: 2),
                 Text(
-                    '${trx.category} / ${DateFormat('d MMM').format(trx.date)}',
+                    '${isTransfer ? '${trx.walletType} ke ${trx.transferToWallet}' : trx.category} / ${DateFormat('d MMM').format(trx.date)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: textColor.withValues(alpha: 0.7), fontSize: 12)),
               ],
             ),
           ),
-          Text('${isIncome ? '+' : '-'}${formatter.format(trx.amount)}',
+          Text(
+              '${isTransfer ? '' : isIncome ? '+' : '-'}${formatter.format(trx.amount)}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color:
-                        isIncome ? AppTheme.incomeGreen : AppTheme.expenseRed,
+                    color: amountColor,
                     fontSize: 14,
                   )),
           const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(Icons.edit_outlined, size: 20, color: textColor),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            tooltip: 'Ubah',
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => AddTransactionScreen(transaction: trx)));
-            },
-          ),
+          if (!isTransfer)
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 20, color: textColor),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              tooltip: 'Ubah',
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            AddTransactionScreen(transaction: trx)));
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline,
                 size: 20, color: AppTheme.expenseRed),

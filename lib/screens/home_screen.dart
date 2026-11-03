@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -9,6 +10,7 @@ import '../providers/app_provider.dart';
 import 'add_transaction_screen.dart';
 import 'add_task_screen.dart';
 import 'settings_screen.dart';
+import 'transfer_balance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -147,6 +149,99 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _showCategoryBudgetDialog(
+    FinanceProvider financeProvider, {
+    String? initialCategory,
+  }) async {
+    var selectedCategory =
+        initialCategory ?? FinanceProvider.budgetCategories.first;
+    final controller = TextEditingController(
+      text: financeProvider.categoryBudget(selectedCategory) > 0
+          ? financeProvider.categoryBudget(selectedCategory).toInt().toString()
+          : '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Anggaran Kategori'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedCategory,
+                    decoration: const InputDecoration(labelText: 'Kategori'),
+                    items: FinanceProvider.budgetCategories
+                        .map((category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() {
+                        selectedCategory = value;
+                        final budget =
+                            financeProvider.categoryBudget(selectedCategory);
+                        controller.text =
+                            budget > 0 ? budget.toInt().toString() : '';
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Batas per bulan',
+                      prefixText: 'Rp ',
+                      helperText: 'Isi 0 untuk menghapus batas.',
+                    ),
+                    validator: (value) {
+                      final amount = double.tryParse(value ?? '');
+                      if (amount == null || !amount.isFinite) {
+                        return 'Masukkan jumlah yang valid.';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('BATAL'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (!formKey.currentState!.validate()) return;
+                  financeProvider.setCategoryBudget(
+                    selectedCategory,
+                    double.parse(controller.text),
+                  );
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('SIMPAN'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
@@ -181,6 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
         .where(
             (t) => t.status != 'Selesai' && t.deadline.isBefore(DateTime.now()))
         .toList();
+    final recentTransactions = financeProvider.allTransactions
+      ..sort((a, b) => b.date.compareTo(a.date));
+    final categoryBudgets = financeProvider.categoryBudgets;
+    final categoryExpenses = financeProvider.expensesByCategory;
 
     return PaperBackground(
       child: SafeArea(
@@ -255,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SALDO BULAN INI',
+                      Text('SALDO SAAT INI',
                           style: Theme.of(context)
                               .textTheme
                               .labelLarge
@@ -263,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 12),
                       Text(
                           currencyFormatter
-                              .format(financeProvider.remainingBalance),
+                              .format(financeProvider.currentBalanceTotal),
                           style: Theme.of(context)
                               .textTheme
                               .displayLarge
@@ -282,8 +381,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? AppTheme.darkPanel
                                     : AppTheme.paleSky,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: borderColor, width: 1),
+                                border:
+                                    Border.all(color: borderColor, width: 1),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +390,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Row(
                                     children: [
                                       Icon(Icons.payments_outlined,
-                                          size: 14, color: textColor.withValues(alpha: 0.7)),
+                                          size: 14,
+                                          color:
+                                              textColor.withValues(alpha: 0.7)),
                                       const SizedBox(width: 4),
                                       Text('CASH',
                                           style: Theme.of(context)
@@ -299,7 +400,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                               .labelLarge
                                               ?.copyWith(
                                                   fontSize: 11,
-                                                  color: textColor.withValues(alpha: 0.7))),
+                                                  color: textColor.withValues(
+                                                      alpha: 0.7))),
                                     ],
                                   ),
                                   const SizedBox(height: 6),
@@ -310,9 +412,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                           .textTheme
                                           .bodyLarge
                                           ?.copyWith(
-                                            color: financeProvider.balanceCash < 0
-                                                ? AppTheme.expenseRed
-                                                : textColor,
+                                            color:
+                                                financeProvider.balanceCash < 0
+                                                    ? AppTheme.expenseRed
+                                                    : textColor,
                                             fontWeight: FontWeight.bold,
                                           )),
                                 ],
@@ -328,16 +431,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ? AppTheme.darkPanel
                                     : AppTheme.paleSky,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: borderColor, width: 1),
+                                border:
+                                    Border.all(color: borderColor, width: 1),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.account_balance_wallet_outlined,
-                                          size: 14, color: textColor.withValues(alpha: 0.7)),
+                                      Icon(
+                                          Icons.account_balance_wallet_outlined,
+                                          size: 14,
+                                          color:
+                                              textColor.withValues(alpha: 0.7)),
                                       const SizedBox(width: 4),
                                       Text('E-WALLET',
                                           style: Theme.of(context)
@@ -345,20 +451,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                               .labelLarge
                                               ?.copyWith(
                                                   fontSize: 11,
-                                                  color: textColor.withValues(alpha: 0.7))),
+                                                  color: textColor.withValues(
+                                                      alpha: 0.7))),
                                     ],
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                      currencyFormatter
-                                          .format(financeProvider.balanceEWallet),
+                                      currencyFormatter.format(
+                                          financeProvider.balanceEWallet),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyLarge
                                           ?.copyWith(
-                                            color: financeProvider.balanceEWallet < 0
-                                                ? AppTheme.expenseRed
-                                                : textColor,
+                                            color:
+                                                financeProvider.balanceEWallet <
+                                                        0
+                                                    ? AppTheme.expenseRed
+                                                    : textColor,
                                             fontWeight: FontWeight.bold,
                                           )),
                                 ],
@@ -367,9 +476,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TransferBalanceScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.swap_horiz),
+                          label: const Text('PINDAH SALDO'),
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       Divider(color: borderColor, thickness: 1.5),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 4),
+                      Text(
+                        'RINGKASAN ${DateFormat('MMMM yyyy', 'id_ID').format(financeProvider.currentMonth).toUpperCase()}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: textColor.withValues(alpha: 0.6),
+                            ),
+                      ),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -423,6 +555,201 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
+              // ANGGARAN PER KATEGORI
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ANGGARAN KATEGORI',
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    letterSpacing: 1.2,
+                                    color: textColor,
+                                  )),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('MMMM yyyy', 'id_ID')
+                            .format(financeProvider.currentMonth)
+                            .toUpperCase(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: textColor.withValues(alpha: 0.6),
+                            ),
+                      ),
+                    ],
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _showCategoryBudgetDialog(financeProvider),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('ATUR'),
+                  ),
+                ],
+              ),
+              if (categoryBudgets.isEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Atur batas bulanan untuk memantau pengeluaran tiap kategori.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: textColor.withValues(alpha: 0.7)),
+                    ),
+                  ),
+                )
+              else
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: categoryBudgets.entries.map((entry) {
+                        final spent = categoryExpenses[entry.key] ?? 0;
+                        final ratio = spent / entry.value;
+                        final isOverBudget = ratio >= 1;
+                        final isNearBudget = ratio >= 0.8;
+                        final progressColor = isOverBudget
+                            ? AppTheme.expenseRed
+                            : isNearBudget
+                                ? AppTheme.priorityMed
+                                : AppTheme.inkSky;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      entry.key,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(color: textColor),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _showCategoryBudgetDialog(
+                                      financeProvider,
+                                      initialCategory: entry.key,
+                                    ),
+                                    child: const Text('UBAH'),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '${currencyFormatter.format(spent)} / ${currencyFormatter.format(entry.value)}'
+                                ' • ${(ratio * 100).toInt()}%'
+                                '${isOverBudget ? ' • MELEBIHI BATAS' : isNearBudget ? ' • HAMPIR BATAS' : ''}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: isOverBudget
+                                          ? AppTheme.expenseRed
+                                          : textColor.withValues(alpha: 0.7),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: LinearProgressIndicator(
+                                  value: ratio.clamp(0.0, 1.0),
+                                  minHeight: 8,
+                                  color: progressColor,
+                                  backgroundColor: borderColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 24),
+
+              // TRANSAKSI TERBARU
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('TRANSAKSI TERBARU',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            letterSpacing: 1.2,
+                            color: textColor,
+                          )),
+                  if (recentTransactions.isNotEmpty)
+                    Text(
+                      '3 TERAKHIR',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: textColor.withValues(alpha: 0.6),
+                          ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: recentTransactions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Belum ada transaksi.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  color: textColor.withValues(alpha: 0.7)),
+                        ),
+                      )
+                    : Column(
+                        children: recentTransactions.take(3).map((transaction) {
+                          final isIncome = transaction.type == 'Pemasukan';
+                          final isTransfer = transaction.type == 'Transfer';
+                          final amountColor = isTransfer
+                              ? textColor
+                              : isIncome
+                                  ? AppTheme.incomeGreen
+                                  : AppTheme.expenseRed;
+                          final amountPrefix = isTransfer
+                              ? ''
+                              : isIncome
+                                  ? '+'
+                                  : '-';
+                          final details = isTransfer
+                              ? '${transaction.walletType} ke ${transaction.transferToWallet}'
+                              : '${transaction.category} • ${transaction.walletType}';
+                          return ListTile(
+                            leading: Icon(
+                              isTransfer
+                                  ? Icons.swap_horiz
+                                  : Icons.payments_outlined,
+                              color: amountColor,
+                            ),
+                            title: Text(
+                              transaction.note,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              '$details • ${DateFormat('d MMM', 'id_ID').format(transaction.date)}',
+                            ),
+                            trailing: Text(
+                              '$amountPrefix${currencyFormatter.format(transaction.amount)}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(color: amountColor),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+              ),
+              const SizedBox(height: 24),
+
               // TUGAS TERDEKAT
               Text('TUGAS TERDEKAT',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -451,7 +778,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
-                                ?.copyWith(color: textColor.withValues(alpha: 0.7))),
+                                ?.copyWith(
+                                    color: textColor.withValues(alpha: 0.7))),
                         const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

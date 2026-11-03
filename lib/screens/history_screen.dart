@@ -42,8 +42,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         build: (pw.Context context) {
           return [
             pw.Text('Riwayat Aktivitas',
-                style: pw.TextStyle(
-                    fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                style:
+                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             pw.Text(
                 'Dicetak: ${DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.now())}',
                 style: const pw.TextStyle(fontSize: 11)),
@@ -69,8 +69,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         width: 70,
                         child: pw.Text('TUGAS',
                             style: pw.TextStyle(
-                                fontSize: 10,
-                                fontWeight: pw.FontWeight.bold)),
+                                fontSize: 10, fontWeight: pw.FontWeight.bold)),
                       ),
                       pw.Expanded(
                         child: pw.Column(
@@ -92,6 +91,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               } else {
                 final trx = item.data as Transaction;
                 final isIncome = trx.type == 'Pemasukan';
+                final isTransfer = trx.type == 'Transfer';
                 return pw.Padding(
                   padding: const pw.EdgeInsets.symmetric(vertical: 6),
                   child: pw.Row(
@@ -108,8 +108,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         width: 70,
                         child: pw.Text('TRANSAKSI',
                             style: pw.TextStyle(
-                                fontSize: 10,
-                                fontWeight: pw.FontWeight.bold)),
+                                fontSize: 10, fontWeight: pw.FontWeight.bold)),
                       ),
                       pw.Expanded(
                         child: pw.Column(
@@ -120,19 +119,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     fontSize: 12,
                                     fontWeight: pw.FontWeight.bold)),
                             pw.Text(
-                                '${trx.category} • ${trx.walletType}',
+                                isTransfer
+                                    ? '${trx.walletType} ke ${trx.transferToWallet}'
+                                    : '${trx.category} • ${trx.walletType}',
                                 style: const pw.TextStyle(fontSize: 10)),
                           ],
                         ),
                       ),
                       pw.Text(
-                        '${isIncome ? '+' : '-'}${currencyFormatter.format(trx.amount)}',
+                        '${isTransfer ? '' : isIncome ? '+' : '-'}${currencyFormatter.format(trx.amount)}',
                         style: pw.TextStyle(
                           fontSize: 11,
                           fontWeight: pw.FontWeight.bold,
-                          color: isIncome
-                              ? PdfColors.green700
-                              : PdfColors.red700,
+                          color: isTransfer
+                              ? PdfColors.blueGrey700
+                              : isIncome
+                                  ? PdfColors.green700
+                                  : PdfColors.red700,
                         ),
                       ),
                     ],
@@ -147,7 +150,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'riwayat_aktivitas_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+      name:
+          'riwayat_aktivitas_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
     );
   }
 
@@ -358,13 +362,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             );
                           } else {
                             // Tampilan Item Transaksi
-                            final isIncome = item.data.type == 'Pemasukan';
+                            final transaction = item.data as Transaction;
+                            final isIncome = transaction.type == 'Pemasukan';
+                            final isTransfer = transaction.type == 'Transfer';
                             return Row(
                               children: [
-                                Icon(Icons.payments_outlined,
-                                    color: isIncome
-                                        ? AppTheme.incomeGreen
-                                        : AppTheme.expenseRed,
+                                Icon(
+                                    isTransfer
+                                        ? Icons.swap_horiz
+                                        : Icons.payments_outlined,
+                                    color: isTransfer
+                                        ? textColor
+                                        : isIncome
+                                            ? AppTheme.incomeGreen
+                                            : AppTheme.expenseRed,
                                     size: 24),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -372,13 +383,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(item.data.note,
+                                      Text(transaction.note,
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium),
                                       const SizedBox(height: 4),
                                       Text(
-                                          '${item.data.category} / ${DateFormat('d MMM').format(item.date)}',
+                                          '${isTransfer ? '${transaction.walletType} ke ${transaction.transferToWallet}' : transaction.category} / ${DateFormat('d MMM').format(item.date)}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium
@@ -389,14 +400,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '${isIncome ? '+' : '-'}${currencyFormatter.format(item.data.amount)}',
+                                  '${isTransfer ? '' : isIncome ? '+' : '-'}${currencyFormatter.format(transaction.amount)}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
                                       ?.copyWith(
-                                          color: isIncome
-                                              ? AppTheme.incomeGreen
-                                              : AppTheme.expenseRed),
+                                          color: isTransfer
+                                              ? textColor
+                                              : isIncome
+                                                  ? AppTheme.incomeGreen
+                                                  : AppTheme.expenseRed),
                                 ),
                               ],
                             );
