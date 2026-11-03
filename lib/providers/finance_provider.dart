@@ -61,6 +61,27 @@ class FinanceProvider extends ChangeNotifier {
 
   double get remainingBalance => totalIncome - totalExpense;
 
+  // ============ PER WALLET ============
+  double get totalIncomeCash => transactions
+      .where((t) => t.type == 'Pemasukan' && t.walletType == 'Cash')
+      .fold(0, (sum, item) => sum + item.amount);
+
+  double get totalExpenseCash => transactions
+      .where((t) => t.type == 'Pengeluaran' && t.walletType == 'Cash')
+      .fold(0, (sum, item) => sum + item.amount);
+
+  double get balanceCash => totalIncomeCash - totalExpenseCash;
+
+  double get totalIncomeEWallet => transactions
+      .where((t) => t.type == 'Pemasukan' && t.walletType == 'E-Wallet')
+      .fold(0, (sum, item) => sum + item.amount);
+
+  double get totalExpenseEWallet => transactions
+      .where((t) => t.type == 'Pengeluaran' && t.walletType == 'E-Wallet')
+      .fold(0, (sum, item) => sum + item.amount);
+
+  double get balanceEWallet => totalIncomeEWallet - totalExpenseEWallet;
+
   double get spendingPercentage {
     if (budgetLimit == 0) return 0;
     return totalExpense / budgetLimit;

@@ -271,6 +271,105 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 16),
                       Divider(color: borderColor, thickness: 1.5),
                       const SizedBox(height: 12),
+                      // BARIS CASH & E-WALLET
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? AppTheme.darkPanel
+                                    : AppTheme.paleSky,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: borderColor, width: 1),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.payments_outlined,
+                                          size: 14, color: textColor.withValues(alpha: 0.7)),
+                                      const SizedBox(width: 4),
+                                      Text('CASH',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelLarge
+                                              ?.copyWith(
+                                                  fontSize: 11,
+                                                  color: textColor.withValues(alpha: 0.7))),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                      currencyFormatter
+                                          .format(financeProvider.balanceCash),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: financeProvider.balanceCash < 0
+                                                ? AppTheme.expenseRed
+                                                : textColor,
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? AppTheme.darkPanel
+                                    : AppTheme.paleSky,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: borderColor, width: 1),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.account_balance_wallet_outlined,
+                                          size: 14, color: textColor.withValues(alpha: 0.7)),
+                                      const SizedBox(width: 4),
+                                      Text('E-WALLET',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelLarge
+                                              ?.copyWith(
+                                                  fontSize: 11,
+                                                  color: textColor.withValues(alpha: 0.7))),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                      currencyFormatter
+                                          .format(financeProvider.balanceEWallet),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: financeProvider.balanceEWallet < 0
+                                                ? AppTheme.expenseRed
+                                                : textColor,
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(color: borderColor, thickness: 1.5),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

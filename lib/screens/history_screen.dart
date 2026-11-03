@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../theme/app_theme.dart';
 import '../providers/task_provider.dart';
 import '../providers/finance_provider.dart';
 import '../widgets/paper_background.dart';
+import '../models/transaction_model.dart';
+import '../models/task_model.dart';
 
 // Class bantuan untuk menggabungkan data
 class HistoryItem {
@@ -25,6 +30,126 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   String _searchQuery = '';
   String _selectedFilter = 'Semua'; // Semua, Tugas, Transaksi
+
+  Future<void> _downloadPdf(
+      List<HistoryItem> items, NumberFormat currencyFormatter) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            pw.Text('Riwayat Aktivitas',
+                style: pw.TextStyle(
+                    fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+                'Dicetak: ${DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.now())}',
+                style: const pw.TextStyle(fontSize: 11)),
+            pw.SizedBox(height: 16),
+            pw.Divider(),
+            pw.SizedBox(height: 8),
+            ...items.map((item) {
+              if (item.type == 'Tugas') {
+                final task = item.data as Task;
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 6),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 60,
+                        child: pw.Text(
+                          DateFormat('d MMM').format(item.date),
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ),
+                      pw.Container(
+                        width: 70,
+                        child: pw.Text('TUGAS',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(task.name,
+                                style: pw.TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                                '${task.course ?? 'Tanpa Mata Kuliah'} • ${task.status}',
+                                style: const pw.TextStyle(fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                final trx = item.data as Transaction;
+                final isIncome = trx.type == 'Pemasukan';
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 6),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 60,
+                        child: pw.Text(
+                          DateFormat('d MMM').format(item.date),
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ),
+                      pw.Container(
+                        width: 70,
+                        child: pw.Text('TRANSAKSI',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(trx.note,
+                                style: pw.TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                                '${trx.category} • ${trx.walletType}',
+                                style: const pw.TextStyle(fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                      pw.Text(
+                        '${isIncome ? '+' : '-'}${currencyFormatter.format(trx.amount)}',
+                        style: pw.TextStyle(
+                          fontSize: 11,
+                          fontWeight: pw.FontWeight.bold,
+                          color: isIncome
+                              ? PdfColors.green700
+                              : PdfColors.red700,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }),
+          ];
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'riwayat_aktivitas_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +223,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Riwayat Aktivitas',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontSize: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Riwayat Aktivitas',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontSize: 28),
+                  ),
+                  IconButton(
+                    tooltip: 'Download PDF',
+                    icon: Icon(Icons.picture_as_pdf_outlined, color: textColor),
+                    onPressed: () =>
+                        _downloadPdf(combinedHistory, currencyFormatter),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 

@@ -26,6 +26,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _isIncome = false;
   String _selectedCategory = 'Makan';
   DateTime _selectedDate = DateTime.now();
+  String _selectedWallet = 'Cash';
 
   final List<String> _categories = [
     'Makan',
@@ -53,6 +54,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _selectedCategory =
           _categories.contains(t.category) ? t.category : 'Lainnya';
       _selectedDate = t.date;
+      _selectedWallet = t.walletType;
     }
   }
 
@@ -97,6 +99,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         category: _selectedCategory,
         date: _selectedDate,
         note: _noteController.text.isEmpty ? '-' : _noteController.text,
+        walletType: _selectedWallet,
       );
 
       final provider = context.read<FinanceProvider>();
@@ -170,6 +173,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             'PEMASUKAN',
                             _isIncome,
                             () => setState(() => _isIncome = true),
+                            isDarkMode)),
+                  ]),
+                  const SizedBox(height: 16),
+
+                  // TOGGLE CASH / E-WALLET
+                  Text('DOMPET', style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                        child: _buildToggle(
+                            'CASH',
+                            _selectedWallet == 'Cash',
+                            () => setState(() => _selectedWallet = 'Cash'),
+                            isDarkMode)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildToggle(
+                            'E-WALLET',
+                            _selectedWallet == 'E-Wallet',
+                            () => setState(() => _selectedWallet = 'E-Wallet'),
                             isDarkMode)),
                   ]),
                   const SizedBox(height: 24),

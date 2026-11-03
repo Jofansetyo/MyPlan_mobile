@@ -5,6 +5,7 @@ class Transaction {
   final String category;
   final DateTime date;
   final String note;
+  final String walletType; // 'Cash' atau 'E-Wallet'
 
   Transaction({
     required this.id,
@@ -13,5 +14,6 @@ class Transaction {
     required this.category,
     required this.date,
     required this.note,
+    this.walletType = 'Cash',
   });
 }
