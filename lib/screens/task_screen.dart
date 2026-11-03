@@ -26,7 +26,7 @@ class TaskScreen extends StatelessWidget {
             children: [
               // HEADER
               Text(
-                'TUGAS / OKT',
+                'TUGAS / ${DateFormat('MMM', 'id_ID').format(DateTime.now()).toUpperCase()}',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: textColor.withValues(alpha: 0.7),
                       letterSpacing: 1.2,

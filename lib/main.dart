@@ -93,7 +93,7 @@ class _MainNavigationState extends State<MainNavigation> {
         index: _currentIndex,
         children: _screens,
       ),
-      floatingActionButton: _currentIndex != 3
+      floatingActionButton: _currentIndex == 0 || _currentIndex == 2
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,

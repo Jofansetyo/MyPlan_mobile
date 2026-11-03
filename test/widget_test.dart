@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:my_plan/main.dart';
@@ -10,25 +13,33 @@ import 'package:my_plan/providers/task_provider.dart';
 import 'package:my_plan/providers/finance_provider.dart';
 
 void main() {
+  late Directory hiveDirectory;
+  late Box<dynamic> taskBox;
+  late Box<dynamic> transactionBox;
+
   setUpAll(() async {
-    // Setup Hive untuk environment testing
-    Hive.init('./test_hive_dir');
+    await initializeDateFormatting('id_ID', null);
+    hiveDirectory =
+        await Directory.systemTemp.createTemp('my_plan_widget_test_');
+    Hive.init(hiveDirectory.path);
     Hive.registerAdapter(TransactionAdapter());
     Hive.registerAdapter(TaskAdapter());
 
     // Mock SharedPreferences
     SharedPreferences.setMockInitialValues({});
+    taskBox = await Hive.openBox<dynamic>('tasksBox_test');
+    transactionBox = await Hive.openBox<dynamic>('transactionsBox_test');
   });
 
   tearDownAll(() async {
-    await Hive.deleteFromDisk();
+    await taskBox.close();
+    await transactionBox.close();
+    await hiveDirectory.delete(recursive: true);
   });
 
   testWidgets('App builds successfully smoke test',
       (WidgetTester tester) async {
     final prefs = await SharedPreferences.getInstance();
-    final taskBox = await Hive.openBox<dynamic>('tasksBox_test');
-    final transactionBox = await Hive.openBox<dynamic>('transactionsBox_test');
 
     await tester.pumpWidget(
       MultiProvider(
@@ -42,9 +53,9 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 600));
 
-    // Cek greeting default 'Halo, Pengguna'
     expect(find.textContaining('Halo,'), findsOneWidget);
   });
 }

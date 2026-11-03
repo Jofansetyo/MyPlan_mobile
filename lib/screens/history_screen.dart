@@ -173,7 +173,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       combinedHistory
           .add(HistoryItem(data: task, date: task.deadline, type: 'Tugas'));
     }
-    for (var trx in financeProvider.transactions) {
+    for (var trx in financeProvider.allTransactions) {
       combinedHistory
           .add(HistoryItem(data: trx, date: trx.date, type: 'Transaksi'));
     }

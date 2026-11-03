@@ -110,9 +110,18 @@ class _FinanceScreenState extends State<FinanceScreen>
               ElevatedButton(
                 onPressed: () {
                   if (!formKey.currentState!.validate()) return;
+                  final amount = double.tryParse(controller.text);
+                  if (amount == null || !amount.isFinite) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Masukkan jumlah yang valid.'),
+                      ),
+                    );
+                    return;
+                  }
                   fp.setCategoryBudget(
                     selectedCategory,
-                    double.parse(controller.text),
+                    amount,
                   );
                   Navigator.pop(ctx);
                 },
