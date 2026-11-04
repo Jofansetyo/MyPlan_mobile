@@ -155,6 +155,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  void _showDeleteHistoryDialog(HistoryItem item) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus riwayat ini?'),
+        content: const Text('Data yang dihapus tidak dapat dikembalikan.'),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('BATAL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (item.type == 'Tugas') {
+                context.read<TaskProvider>().deleteTask(item.data.id);
+              } else {
+                context
+                    .read<FinanceProvider>()
+                    .deleteTransaction(item.data.id);
+              }
+              Navigator.pop(dialogContext);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.expenseRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('HAPUS'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
@@ -358,6 +391,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         .textTheme
                                         .labelLarge
                                         ?.copyWith(fontSize: 12)),
+                                IconButton(
+                                  tooltip: 'Hapus riwayat',
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: AppTheme.expenseRed,
+                                  onPressed: () =>
+                                      _showDeleteHistoryDialog(item),
+                                ),
                               ],
                             );
                           } else {
@@ -398,6 +438,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                       alpha: 0.6))),
                                     ],
                                   ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Hapus riwayat',
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: AppTheme.expenseRed,
+                                  onPressed: () =>
+                                      _showDeleteHistoryDialog(item),
                                 ),
                                 Text(
                                   '${isTransfer ? '' : isIncome ? '+' : '-'}${currencyFormatter.format(transaction.amount)}',
