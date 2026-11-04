@@ -220,9 +220,48 @@ class _FinanceScreenState extends State<FinanceScreen>
           ),
           body: NestedScrollView(
             headerSliverBuilder: (context, _) => [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTheme.darkPanel : AppTheme.panelBg,
+                        border: Border.all(color: borderColor, width: 1.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicator: BoxDecoration(
+                          color: isDark ? AppTheme.inkSky : AppTheme.inkNavy,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        labelStyle: const TextStyle(
+                            fontFamily: 'KodeMono',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13),
+                        unselectedLabelStyle: const TextStyle(
+                            fontFamily: 'KodeMono', fontSize: 13),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: textColor.withValues(alpha: 0.6),
+                        dividerColor: Colors.transparent,
+                        tabs: const [
+                          Tab(text: 'RINGKASAN'),
+                          Tab(text: 'ANGGARAN'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  64,
+                  isDark ? AppTheme.darkBg : Colors.transparent,
+                ),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -259,28 +298,6 @@ class _FinanceScreenState extends State<FinanceScreen>
                       const SizedBox(height: 16),
                     ],
                   ),
-                ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabBarDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    labelStyle: const TextStyle(
-                        fontFamily: 'KodeMono',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13),
-                    unselectedLabelStyle:
-                        const TextStyle(fontFamily: 'KodeMono', fontSize: 13),
-                    labelColor: textColor,
-                    unselectedLabelColor: textColor.withValues(alpha: 0.5),
-                    indicatorColor: isDark ? AppTheme.inkSky : AppTheme.inkNavy,
-                    tabs: const [
-                      Tab(text: 'RINGKASAN'),
-                      Tab(text: 'ANGGARAN'),
-                    ],
-                  ),
-                  isDark ? AppTheme.darkPanel : AppTheme.panelBg,
                 ),
               ),
             ],
@@ -341,24 +358,26 @@ class _FinanceScreenState extends State<FinanceScreen>
 
 // ============ TAB BAR DELEGATE ============
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
+  final Widget child;
+  final double height;
   final Color bgColor;
-  _TabBarDelegate(this.tabBar, this.bgColor);
+  _TabBarDelegate(this.child, this.height, this.bgColor);
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => height;
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => height;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: bgColor, child: tabBar);
+    return Container(color: bgColor, child: child);
   }
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      oldDelegate.tabBar != tabBar || oldDelegate.bgColor != bgColor;
+      oldDelegate.child != child || oldDelegate.height != height ||
+      oldDelegate.bgColor != bgColor;
 }
 
 // ============ RINGKASAN TAB ============
