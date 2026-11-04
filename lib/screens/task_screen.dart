@@ -46,11 +46,16 @@ class TaskScreen extends StatelessWidget {
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: taskProvider.tasks.length,
+                itemCount: taskProvider.tasks
+                    .where((task) => task.status != 'Selesai')
+                    .length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 16),
                 itemBuilder: (context, index) {
-                  final task = taskProvider.tasks[index];
+                  final pendingTasks = taskProvider.tasks
+                      .where((task) => task.status != 'Selesai')
+                      .toList();
+                  final task = pendingTasks[index];
                   return _buildTaskCard(
                       context, task, isDarkMode, borderColor, textColor);
                 },
@@ -186,33 +191,7 @@ class TaskScreen extends StatelessWidget {
             const Divider(height: 1, thickness: 1),
             const SizedBox(height: 12),
 
-            // Tandai tugas selesai atau kembalikan ke status belum.
-            Row(
-              children: [
-                Checkbox(
-                  value: task.status == 'Selesai',
-                  onChanged: (completed) {
-                    if (completed != null) {
-                      context
-                          .read<TaskProvider>()
-                          .toggleTaskCompletion(task, completed);
-                    }
-                  },
-                  activeColor: AppTheme.inkSky,
-                ),
-                Expanded(
-                  child: Text(
-                    task.status == 'Selesai'
-                        ? 'TUGAS SELESAI'
-                        : 'TANDAI SELESAI',
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-
-            // Tombol Aksi (Ubah & Hapus)
+            // Tombol Aksi
             Row(
               children: [
                 Expanded(
@@ -230,6 +209,20 @@ class TaskScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: const Text('UBAH'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<TaskProvider>().toggleTaskCompletion(task, true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: AppTheme.inkSky,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('SELESAI'),
                   ),
                 ),
                 const SizedBox(width: 12),
