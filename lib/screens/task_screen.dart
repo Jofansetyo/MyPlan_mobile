@@ -219,7 +219,7 @@ class TaskScreen extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: AppTheme.inkSky,
+                      backgroundColor: AppTheme.priorityLow,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('SELESAI'),
