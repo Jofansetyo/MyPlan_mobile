@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return PaperBackground(
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

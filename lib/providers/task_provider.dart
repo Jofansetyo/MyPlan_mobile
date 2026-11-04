@@ -28,6 +28,19 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleTaskCompletion(Task task, bool completed) {
+    updateTask(Task(
+      id: task.id,
+      name: task.name,
+      course: task.course,
+      assignedDate: task.assignedDate,
+      deadline: task.deadline,
+      priority: task.priority,
+      status: completed ? 'Selesai' : 'Belum',
+      reminder: task.reminder,
+    ));
+  }
+
   void deleteTask(String id) {
     _box.delete(id);
     notifyListeners();

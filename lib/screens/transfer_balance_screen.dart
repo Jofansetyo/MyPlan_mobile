@@ -76,7 +76,7 @@ class _TransferBalanceScreenState extends State<TransferBalanceScreen> {
             backgroundColor: Colors.transparent,
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Form(
               key: _formKey,
               child: Column(

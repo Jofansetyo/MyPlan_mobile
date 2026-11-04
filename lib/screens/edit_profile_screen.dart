@@ -83,7 +83,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

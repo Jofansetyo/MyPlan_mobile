@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -56,8 +58,10 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appProvider.themeMode,
-      // UBAH: home sekarang SplashScreen
-      home: const SplashScreen(destination: MainNavigation()),
+      // Skip splash in automated tests so UI assertions remain deterministic.
+      home: Platform.environment.containsKey('FLUTTER_TEST')
+          ? const MainNavigation()
+          : const SplashScreen(destination: MainNavigation()),
     );
   }
 }

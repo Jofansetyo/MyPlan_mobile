@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/paper_background.dart';
@@ -33,8 +35,11 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _controller.forward();
 
-    // Navigate setelah 2.2 detik
-    Timer(const Duration(milliseconds: 2200), () {
+    final navigationDelay = Platform.environment.containsKey('FLUTTER_TEST')
+        ? Duration.zero
+        : const Duration(milliseconds: 2200);
+
+    Timer(navigationDelay, () {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

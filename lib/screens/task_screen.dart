@@ -20,7 +20,7 @@ class TaskScreen extends StatelessWidget {
     return PaperBackground(
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -185,6 +185,32 @@ class TaskScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const Divider(height: 1, thickness: 1),
             const SizedBox(height: 12),
+
+            // Tandai tugas selesai atau kembalikan ke status belum.
+            Row(
+              children: [
+                Checkbox(
+                  value: task.status == 'Selesai',
+                  onChanged: (completed) {
+                    if (completed != null) {
+                      context
+                          .read<TaskProvider>()
+                          .toggleTaskCompletion(task, completed);
+                    }
+                  },
+                  activeColor: AppTheme.inkSky,
+                ),
+                Expanded(
+                  child: Text(
+                    task.status == 'Selesai'
+                        ? 'TUGAS SELESAI'
+                        : 'TANDAI SELESAI',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
 
             // Tombol Aksi (Ubah & Hapus)
             Row(
