@@ -1,17 +1,31 @@
-# my_plan
+# MyPlan
 
-A new Flutter project.
+MyPlan adalah aplikasi Flutter untuk membantu mengatur tugas dan mencatat
+keuangan pribadi.
 
-## Getting Started
+## Fitur
 
-This project is a starting point for a Flutter application.
+- Mencatat, mengubah, dan menyelesaikan tugas.
+- Melihat tugas yang selesai di halaman riwayat.
+- Mencatat pemasukan, pengeluaran, dan transfer antar-dompet.
+- Melihat ringkasan transaksi dan mengatur anggaran per bulan.
+- Menghapus item riwayat dengan konfirmasi.
+- Menyimpan data secara lokal menggunakan Hive.
 
-A few resources to get you started if this is your first Flutter project:
+## Menjalankan aplikasi
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Pastikan Flutter sudah terpasang, lalu jalankan dari folder proyek:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run
+```
+
+Untuk memilih perangkat tertentu, lihat perangkat yang tersedia dengan
+`flutter devices`, lalu jalankan `flutter run -d <device-id>`.
+
+## Menjalankan pengujian
+
+```bash
+flutter test
+```
